@@ -17,8 +17,13 @@ var citiesRoutes = []Route{
 		Function: controllers.GetAllCities,
 	},
 	{
-		Uri:      "/cities/{uf}",
+		Uri:      "/cities/{id}",
 		Method:   http.MethodGet,
-		Function: controllers.GetCitiesByUF,
+		Function: controllers.GetCitiesByID,
+	},
+	{
+		Uri:      "/cities/{id}",
+		Method:   http.MethodPut,
+		Function: controllers.UpdateCityByID,
 	},
 }

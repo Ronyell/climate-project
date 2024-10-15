@@ -1,5 +1,8 @@
 Commands Docker
+Command to run all:
+- docker-compose up
 
+Command to exec docker in mysql:
 - docker exec -it my-mysql mysql -u root -p 
     (type password mysqlPW)
 

@@ -3,6 +3,7 @@ package repositories
 import (
 	"api/src/models"
 	"database/sql"
+	"time"
 )
 
 // Represent a city repository
@@ -38,21 +39,74 @@ func (citiesRepository CitiesRepository) Create(cityObj models.City) (uint64, er
 }
 
 // Get all cities
-// func (citiesRepository CitiesRepository) getAll() (uint64, error) {
-// statement, erro := citiesRepository.db.Prepare("select * from cities")
-// if erro != nil {
-// 	return 0, nil
-// }
-// defer statement.Close()
+func (citiesRepository CitiesRepository) GetCityByUF(ufSerach string) ([]models.City, error) {
+	rows, erro := citiesRepository.db.Query("select * from cities where uf = ?", ufSerach)
+	if erro != nil {
+		return nil, erro
+	}
 
-// result, erro := statement.Exec()
-// if erro != nil {
-// 	return 0, nil
-// }
+	defer rows.Close()
+	var cities []models.City
 
-// if erro != nil {
-// 	return 0, nil
-// }
+	for rows.Next() {
+		var cityObj models.City
 
-// return uint64(lastID), nil
-// }
+		if erro = rows.Scan(
+			&cityObj.ID,
+			&cityObj.Name,
+			&cityObj.UF,
+			&cityObj.CreatedAt,
+		); erro != nil {
+			return nil, erro
+		}
+		cities = append(cities, cityObj)
+	}
+	return cities, nil
+}
+
+// Get city by id
+func (citiesRepository CitiesRepository) GetCityById(id uint64) (models.City, error) {
+	rows, erro := citiesRepository.db.Query("select * from cities where id = ?", id)
+	if erro != nil {
+		return models.City{
+			ID:        0,
+			Name:      "",
+			UF:        "",
+			CreatedAt: time.Time{},
+		}, erro
+	}
+
+	defer rows.Close()
+	var cityObj models.City
+
+	for rows.Next() {
+		if erro = rows.Scan(
+			&cityObj.ID,
+			&cityObj.Name,
+			&cityObj.UF,
+			&cityObj.CreatedAt,
+		); erro != nil {
+			return models.City{
+				ID:        0,
+				Name:      "",
+				UF:        "",
+				CreatedAt: time.Time{},
+			}, erro
+		}
+	}
+	return cityObj, nil
+}
+
+func (citiesRepository CitiesRepository) UpdateCityById(id uint64, cityObj models.City) error {
+
+	statement, erro := citiesRepository.db.Prepare("update  cities set name = ?, uf = ? where id = ?")
+	if erro != nil {
+		return erro
+	}
+	defer statement.Close()
+
+	if _, erro = statement.Exec(cityObj.Name, cityObj.UF, id); erro != nil {
+		return erro
+	}
+	return nil
+}
