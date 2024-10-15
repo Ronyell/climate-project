@@ -2,13 +2,26 @@ version: '3.8'
 services:
   db:
     image: mysql/mysql-server:latest
-    container_name: my-mysql
+    container_name: db
     restart: always
     environment:
       - MYSQL_DATABASE=elections
       - MYSQL_ROOT_PASSWORD=mysqlPW
-      - MYSQL_ROOT_HOST=% 
+      - MYSQL_ROOT_HOST=%
     ports:
       - '3306:3306'
     volumes:
       - ./sql/model.sql:/docker-entrypoint-initdb.d/model.sql
+  app:
+    # Configuration for building the docker image for the service
+    build:
+      context: . # Use an image built from the specified dockerfile in the current directory.
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000" # Forward the exposed port 8080 on the container to port 8080 on the host machine
+    restart: unless-stopped
+    depends_on: 
+      - db # This service depends on redis. Start that first.
+    environment: # Pass environment variables to the service
+      DB_HOST: db
+    command: "go run /app/main.go"

@@ -1,11 +1,20 @@
 Commands Docker
-Command to run all:
+Command to run database and api:
 - docker-compose up
 
-Command to exec docker in mysql:
-- docker exec -it my-mysql mysql -u root -p 
-    (type password mysqlPW)
+Sample call:
+```
+curl --location 'http://localhost:5000/cities' \
+--header 'Content-Type: application/json' \
+--data '{
+    "name": "Campinas",
+    "UF": "SP"
+}'
+```
 
+Command to exec docker in mysql:
+- docker exec -it db mysql -u root -p 
+    (type password mysqlPW)
 
 
 Rules/Commands Go
