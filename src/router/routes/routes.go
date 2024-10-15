@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"api/src/middlewares"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -18,7 +19,7 @@ func Configure(r *mux.Router) *mux.Router {
 	routes := citiesRoutes
 
 	for _, route := range routes {
-		r.HandleFunc(route.Uri, route.Function).Methods(route.Method)
+		r.HandleFunc(route.Uri, middlewares.Logger(route.Function)).Methods(route.Method)
 	}
 	return r
 }
