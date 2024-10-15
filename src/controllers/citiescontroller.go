@@ -4,39 +4,56 @@ import (
 	"api/src/database"
 	"api/src/models"
 	"api/src/repositories"
+	"api/src/response"
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
+
+	"github.com/go-playground/validator/v10"
 )
 
 // Function responsible to create city
 func CreateCities(w http.ResponseWriter, r *http.Request) {
 	requestBody, erro := io.ReadAll(r.Body)
 	if erro != nil {
-		log.Fatal(erro)
+		response.Erro(w, http.StatusUnprocessableEntity, erro)
+		return
 	}
 
-	var city models.City
-	if erro = json.Unmarshal(requestBody, &city); erro != nil {
-		log.Fatal(erro)
+	var cityObj models.City
+	if erro = json.Unmarshal(requestBody, &cityObj); erro != nil {
+		response.Erro(w, http.StatusBadRequest, erro)
+		return
+	}
+
+	// Create a new validator instance
+	validate := validator.New()
+
+	// Validate the User struct
+	if erro = validate.Struct(cityObj); erro != nil {
+		errors := erro.(validator.ValidationErrors)
+		fmt.Println(errors)
+		response.Erro(w, http.StatusBadRequest, errors)
+		return
 	}
 
 	db, erro := database.Connect()
 	if erro != nil {
-		log.Fatal(erro)
+		response.Erro(w, http.StatusInternalServerError, erro)
+		return
 	}
 
 	repository := repositories.GetCitiesRepository(db)
 
-	cityID, erro := repository.Create(city)
+	cityObj.ID, erro = repository.Create(cityObj)
 
 	if erro != nil {
-		log.Fatal(erro)
+		response.Erro(w, http.StatusInternalServerError, erro)
+		return
 	}
 
-	w.Write([]byte(fmt.Sprintf("Create city with id %d", cityID)))
+	response.JSON(w, http.StatusCreated, cityObj)
 
 }
 
