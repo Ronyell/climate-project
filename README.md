@@ -6,6 +6,9 @@ Rules/Commands Go
  - `go build` -> Compile project
  - `go install` -> Compile project (save it in root)
  - `go get <package>` -> install external package
+ - `go test` -> Run tests in package
+ - `go test ./...` -> Run tests in all project
+ - `go tool cover --html=<cover.html>` -> Run tests in all project
 
 ### Rules
 - Point of enter is in package main
