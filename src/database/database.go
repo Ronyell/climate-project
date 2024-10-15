@@ -3,7 +3,8 @@ package database
 import (
 	"api/src/config"
 	"database/sql"
-	//Driver
+
+	_ "github.com/go-sql-driver/mysql" //Driver
 )
 
 // Open connection wuth database
