@@ -1,3 +1,10 @@
+Commands Docker
+
+- docker exec -it my-mysql mysql -u root -p 
+    (type password mysqlPW)
+
+
+
 Rules/Commands Go
 
 ### Commands:
