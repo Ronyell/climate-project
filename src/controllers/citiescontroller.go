@@ -16,6 +16,54 @@ import (
 	"github.com/gorilla/mux"
 )
 
+func CreateCitiesBulk(w http.ResponseWriter, r *http.Request) {
+	requestBody, erro := io.ReadAll(r.Body)
+	if erro != nil {
+		response.Erro(w, http.StatusUnprocessableEntity, erro)
+		return
+	}
+
+	var cityObjts []models.City
+	if erro = json.Unmarshal(requestBody, &cityObjts); erro != nil {
+		response.Erro(w, http.StatusBadRequest, erro)
+		return
+	}
+
+	// Create a new validator instance
+	validate := validator.New()
+
+	// Validate the User struct
+
+	for _, obj := range cityObjts {
+		if erro = validate.Struct(obj); erro != nil {
+			errors := erro.(validator.ValidationErrors)
+			fmt.Println(errors)
+			response.Erro(w, http.StatusBadRequest, errors)
+			return
+		}
+	}
+
+	db, erro := database.Connect()
+	if erro != nil {
+		response.Erro(w, http.StatusInternalServerError, erro)
+		return
+	}
+
+	repository := repositories.GetCitiesRepository(db)
+
+	for _, obj := range cityObjts {
+		objId, erro := repository.Create(obj)
+		obj.ID = fmt.Sprint(objId)
+		if erro != nil {
+			response.Erro(w, http.StatusInternalServerError, erro)
+			return
+		}
+	}
+
+	response.JSON(w, http.StatusCreated, cityObjts)
+
+}
+
 // Function responsible to create city
 func CreateCities(w http.ResponseWriter, r *http.Request) {
 	requestBody, erro := io.ReadAll(r.Body)
@@ -49,7 +97,8 @@ func CreateCities(w http.ResponseWriter, r *http.Request) {
 
 	repository := repositories.GetCitiesRepository(db)
 
-	cityObj.ID, erro = repository.Create(cityObj)
+	objId, erro := repository.Create(cityObj)
+	cityObj.ID = fmt.Sprint(objId)
 
 	if erro != nil {
 		response.Erro(w, http.StatusInternalServerError, erro)
@@ -107,7 +156,7 @@ func GetCitiesByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if cityObj.ID == 0 {
+	if cityObj.ID == "" {
 		response.Erro(w, http.StatusNotFound, errors.New("city not found"))
 		return
 	}

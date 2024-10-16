@@ -4,7 +4,7 @@ USE climate;
 DROP TABLE IF EXISTS cities;
 
 CREATE TABLE cities(
-    cityId int auto_increment primary key,
+    cityId int primary key not null,
     cityName varchar(100) not null,
     cityUf varchar(2) not null,
     createdAt timestamp default current_timestamp()

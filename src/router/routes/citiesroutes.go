@@ -26,4 +26,9 @@ var citiesRoutes = []Route{
 		Method:   http.MethodPut,
 		Function: controllers.UpdateCityByID,
 	},
+	{
+		Uri:      "/cities/bulk",
+		Method:   http.MethodPost,
+		Function: controllers.CreateCitiesBulk,
+	},
 }

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mapa Brasil</title>
+</head>
+<body>
+
+<script type="text/javascript" src="mapa-brasil.min.js"></script>
+<div id="mapa" style="height: 400px; width: 600px; border: 1px solid"></div>
+<br>
+<input type="button" value="Brasil Federacao" onclick="brasilFederacao()">
+<input type="button" value="Brasil Mesorregiao" onclick="brasilMesorregiao()">
+<input type="button" value="Brasil Microrregiao" onclick="brasilMicroregiao()">
+<input type="button" value="Brasil Município" onclick="brasilMunicipio()">
+<br>
+<br>
+<input type="button" value="Brasil -> Mesorregiao" onclick="brasilGoToMesorregiao()">
+<input type="button" value="Brasil -> Microrregiao" onclick="brasilGoToMicroregiao()">
+<input type="button" value="Brasil -> Município" onclick="brasilGoToMunicipio()">
+<input type="button" value="Município 6 digitos" onclick="municipio6Digitos()">
+
+<script type="text/javascript">
+    function brasilFederacao() {
+        MapaBrasil(document.getElementById('mapa'), {
+            unidadeData: [
+                {codIbge: 52, fillColor: '#d82b40'},
+                {codIbge: 43, fillColor: '#d82b40'},
+                {codIbge: 11, fillColor: '#ffa700', strokeColor: '#008744', strokeWidth: 4},
+            ],
+            onClick: function (data) {console.log(data)}
+        });
+    }
+
+    function brasilMunicipio() {
+        MapaBrasil(document.getElementById('mapa'), {
+            regiao: 'municipio',
+            onClick: function (data) {console.log(data)}
+        });
+    }
+
+    function brasilMesorregiao() {
+        MapaBrasil(document.getElementById('mapa'), {
+            regiao: 'mesorregiao',
+            onClick: function (data) {console.log(data)}
+        });
+    }
+
+    function brasilMicroregiao() {
+        MapaBrasil(document.getElementById('mapa'), {
+            regiao: 'microrregiao',
+            onClick: function (data) {console.log(data)}
+        });
+    }
+
+    // GO TO
+    function brasilGoToMunicipio() {
+        MapaBrasil(document.getElementById('mapa'), {
+            onClick: function (data) {
+                console.log(data);
+                MapaBrasil(document.getElementById('mapa'), {
+                    unidade: data.codIbge,
+                    regiao: 'municipio',
+                    onClick: function (data) {
+                        console.log(data)
+                    }
+                });
+            }
+        });
+    }
+
+    function brasilGoToMesorregiao() {
+        MapaBrasil(document.getElementById('mapa'), {
+            onClick: function (data) {
+                console.log(data);
+                MapaBrasil(document.getElementById('mapa'), {
+                    unidade: data.codIbge,
+                    regiao: 'mesorregiao',
+                    onClick: function (data) {
+                        console.log(data)
+                    }
+                });
+            }
+        });
+    }
+
+    function brasilGoToMicroregiao() {
+        MapaBrasil(document.getElementById('mapa'), {
+            onClick: function (data) {
+                console.log(data);
+                MapaBrasil(document.getElementById('mapa'), {
+                    unidade: data.codIbge,
+                    regiao: 'microrregiao',
+                    onClick: function (data) {
+                        console.log(data)
+                    }
+                });
+            }
+        });
+    }
+
+    function municipio6Digitos(){
+        MapaBrasil(document.getElementById('mapa'), {
+            unidade: 11,
+            regiao: 'municipio',
+            unidadeData: [
+                {codIbge: 110001, fillColor: '#d82b40'}
+            ],
+            onClick: function (data) {
+                console.log(data)
+            }
+        });
+    }
+
+    window.onload = function () {
+        brasilFederacao();
+    }
+</script>
+
+</body>
+</html>

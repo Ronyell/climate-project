@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"api/src/database"
+	"api/src/models"
 	"api/src/repositories"
 	"api/src/response"
 	"io"
@@ -45,7 +46,7 @@ func GetAllEvents(w http.ResponseWriter, r *http.Request) {
 	}
 
 	repository := repositories.GetEventsRepository(db)
-	var events any
+	var events []models.EventDescriber
 
 	if cityUf == "" {
 		events, erro = repository.GetEventByType(eventType)

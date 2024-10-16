@@ -54,7 +54,7 @@ func (eventsRepository EventsRepository) CreateEvent(requestBody []byte) (uint64
 }
 
 // Get all events by type
-func (eventsRepository EventsRepository) GetEventByType(eventType string) (any, error) {
+func (eventsRepository EventsRepository) GetEventByType(eventType string) ([]models.EventDescriber, error) {
 	if eventType == "" {
 		var resultChannels []chan []models.EventDescriber
 		var waitGroup sync.WaitGroup
@@ -81,7 +81,7 @@ func (eventsRepository EventsRepository) GetEventByType(eventType string) (any, 
 }
 
 // Get all events by type and city uf
-func (eventsRepository EventsRepository) GetEventByTypeAndUf(eventType string, cityUf string) (any, error) {
+func (eventsRepository EventsRepository) GetEventByTypeAndUf(eventType string, cityUf string) ([]models.EventDescriber, error) {
 	if eventType == "" {
 		var resultChannels []chan []models.EventDescriber
 		var waitGroup sync.WaitGroup
@@ -184,7 +184,7 @@ func (eventsRepository EventsRepository) startGetGenericEvent(waitGroup *sync.Wa
 	return results
 }
 
-func (eventsRepository EventsRepository) closeAndThreatingData(resultChanel []chan []models.EventDescriber) (any, error) {
+func (eventsRepository EventsRepository) closeAndThreatingData(resultChanel []chan []models.EventDescriber) ([]models.EventDescriber, error) {
 	var finalResult []models.EventDescriber
 	for _, rChan := range resultChanel {
 		close(rChan)
@@ -251,6 +251,7 @@ func (eventsRepository EventsRepository) getEventsDrySQL(rows *sql.Rows) (models
 		&eventObj.RelativeHumidity,
 		&eventObj.City.Name,
 		&eventObj.City.UF,
+		&eventObj.City.ID,
 	); erro != nil {
 		return nil, erro
 	}
@@ -268,6 +269,7 @@ func (eventsRepository EventsRepository) getEventsBurnSQL(rows *sql.Rows) (model
 		&eventObj.IsConservationArea,
 		&eventObj.City.Name,
 		&eventObj.City.UF,
+		&eventObj.City.ID,
 	); erro != nil {
 		return nil, erro
 	}
@@ -285,6 +287,7 @@ func (eventsRepository EventsRepository) getEventsHotSQL(rows *sql.Rows) (models
 		&eventObj.Temperature,
 		&eventObj.City.Name,
 		&eventObj.City.UF,
+		&eventObj.City.ID,
 	); erro != nil {
 		return nil, erro
 	}
@@ -302,6 +305,7 @@ func (eventsRepository EventsRepository) getEventsColdSQL(rows *sql.Rows) (model
 		&eventObj.Temperature,
 		&eventObj.City.Name,
 		&eventObj.City.UF,
+		&eventObj.City.ID,
 	); erro != nil {
 		return nil, erro
 	}
@@ -319,6 +323,7 @@ func (eventsRepository EventsRepository) getEventsFloodSQL(rows *sql.Rows) (mode
 		&eventObj.RainPrecipitation,
 		&eventObj.City.Name,
 		&eventObj.City.UF,
+		&eventObj.City.ID,
 	); erro != nil {
 		return nil, erro
 	}
@@ -336,6 +341,7 @@ func (eventsRepository EventsRepository) getEventsSlideSQL(rows *sql.Rows) (mode
 		&eventObj.HousesAffected,
 		&eventObj.City.Name,
 		&eventObj.City.UF,
+		&eventObj.City.ID,
 	); erro != nil {
 		return nil, erro
 	}

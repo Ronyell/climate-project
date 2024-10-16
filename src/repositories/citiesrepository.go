@@ -19,13 +19,13 @@ func GetCitiesRepository(db *sql.DB) *CitiesRepository {
 
 // Create a city
 func (citiesRepository CitiesRepository) Create(cityObj models.City) (uint64, error) {
-	statement, erro := citiesRepository.db.Prepare("insert into cities (cityName, cityUf) values (?, ?)")
+	statement, erro := citiesRepository.db.Prepare("insert into cities (cityId, cityName, cityUf) values (?, ?, ?)")
 	if erro != nil {
 		return 0, nil
 	}
 	defer statement.Close()
 
-	result, erro := statement.Exec(cityObj.Name, cityObj.UF)
+	result, erro := statement.Exec(cityObj.ID, cityObj.Name, cityObj.UF)
 	if erro != nil {
 		return 0, nil
 	}
@@ -70,7 +70,7 @@ func (citiesRepository CitiesRepository) GetCityById(id uint64) (models.City, er
 	rows, erro := citiesRepository.db.Query("select * from cities where cityId = ?", id)
 	if erro != nil {
 		return models.City{
-			ID:        0,
+			ID:        "",
 			Name:      "",
 			UF:        "",
 			CreatedAt: &null.Time{},
@@ -88,7 +88,7 @@ func (citiesRepository CitiesRepository) GetCityById(id uint64) (models.City, er
 			&cityObj.CreatedAt,
 		); erro != nil {
 			return models.City{
-				ID:        0,
+				ID:        "",
 				Name:      "",
 				UF:        "",
 				CreatedAt: &null.Time{},
