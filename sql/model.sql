@@ -59,7 +59,7 @@ CREATE TABLE eventsflood(
 ) ENGINE=INNODB;
 
 CREATE TABLE eventsslide(
-    eventFloodId int auto_increment primary key,
+    eventSlideId int auto_increment primary key,
     housesAffected int not null,
     eventId int not null,
     FOREIGN KEY (eventId) REFERENCES events(eventId) ON DELETE CASCADE

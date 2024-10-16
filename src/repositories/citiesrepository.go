@@ -3,7 +3,8 @@ package repositories
 import (
 	"api/src/models"
 	"database/sql"
-	"time"
+
+	"github.com/guregu/null"
 )
 
 // Represent a city repository
@@ -72,7 +73,7 @@ func (citiesRepository CitiesRepository) GetCityById(id uint64) (models.City, er
 			ID:        0,
 			Name:      "",
 			UF:        "",
-			CreatedAt: time.Time{},
+			CreatedAt: &null.Time{},
 		}, erro
 	}
 
@@ -90,7 +91,7 @@ func (citiesRepository CitiesRepository) GetCityById(id uint64) (models.City, er
 				ID:        0,
 				Name:      "",
 				UF:        "",
-				CreatedAt: time.Time{},
+				CreatedAt: &null.Time{},
 			}, erro
 		}
 	}

@@ -35,7 +35,24 @@ func CreateEvents(w http.ResponseWriter, r *http.Request) {
 
 // Function responsible to get all cities
 func GetAllEvents(w http.ResponseWriter, r *http.Request) {
+	ufSearch := ""
 
+	db, erro := database.Connect()
+	if erro != nil {
+		response.Erro(w, http.StatusInternalServerError, erro)
+		return
+	}
+
+	repository := repositories.GetEventsRepository(db)
+
+	events, erro := repository.GetEventByType(ufSearch)
+
+	if erro != nil {
+		response.Erro(w, http.StatusInternalServerError, erro)
+		return
+	}
+
+	response.JSON(w, http.StatusOK, events)
 }
 
 // Function responsible to get city by ID

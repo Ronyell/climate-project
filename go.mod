@@ -10,6 +10,7 @@ require (
 	github.com/go-playground/validator/v10 v10.22.1 // indirect
 	github.com/go-sql-driver/mysql v1.8.1 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
+	github.com/guregu/null v4.0.0+incompatible // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	golang.org/x/crypto v0.19.0 // indirect

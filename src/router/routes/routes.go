@@ -20,8 +20,8 @@ func Configure(r *mux.Router) *mux.Router {
 		r.HandleFunc(route.Uri, middlewares.Logger(route.Function)).Methods(route.Method)
 	}
 
-	for _, route := range eventsRoutes {
-		r.HandleFunc(route.Uri, middlewares.Logger(route.Function)).Methods(route.Method)
+	for _, route2 := range eventsRoutes {
+		r.HandleFunc(route2.Uri, middlewares.Logger(route2.Function)).Methods(route2.Method)
 	}
 
 	return r

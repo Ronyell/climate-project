@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/guregu/null"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -33,12 +34,12 @@ func getValueByFieldName(obj any, fieldName string) interface{} {
 
 // Represent the event
 type Event struct {
-	ID          uint64    `json:"id,omitempty"`
-	City        City      `json:"city,omitempty"`
-	EventType   string    `json:"eventType,omitempty" validate:"required,oneof=SECA INCENDIO CALOR FRIO INUNDACAO DESLIZAMENTO"`
-	InitialDate time.Time `json:"initialDate,omitempty"`
-	FinalDate   time.Time `json:"finalDate,omitempty"`
-	CreatedAt   time.Time `json:"createdAt,omitempty"`
+	ID          uint64     `json:"id,omitempty"`
+	City        City       `json:"city,omitempty"`
+	EventType   string     `json:"eventType,omitempty" validate:"required,oneof=SECA INCENDIO CALOR FRIO INUNDACAO DESLIZAMENTO"`
+	InitialDate time.Time  `json:"initialDate,omitempty"`
+	FinalDate   *null.Time `json:"finalDate,omitempty"`
+	CreatedAt   *null.Time `json:"createdAt,omitempty"`
 }
 
 func (e *Event) GetFieldAndTableName() (string, string) {

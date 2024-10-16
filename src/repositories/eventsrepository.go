@@ -29,22 +29,22 @@ func (eventsRepository EventsRepository) CreateEvent(requestBody []byte) (uint64
 	eventType := eventObject.EventType
 
 	switch eventType {
-	case "SECA":
+	case DRY:
 		var eventDry models.EventDry
 		return genericCreateEvent(&eventDry, requestBody, eventsRepository)
-	case "INCENDIO":
+	case BURN:
 		var eventBurn models.EventBurn
 		return genericCreateEvent(&eventBurn, requestBody, eventsRepository)
-	case "CALOR":
+	case HOT:
 		var eventHot models.EventHot
 		return genericCreateEvent(&eventHot, requestBody, eventsRepository)
-	case "FRIO":
+	case COLD:
 		var eventCold models.EventCold
 		return genericCreateEvent(&eventCold, requestBody, eventsRepository)
-	case "INUNDACAO":
+	case FLOOD:
 		var eventFlood models.EventFlood
 		return genericCreateEvent(&eventFlood, requestBody, eventsRepository)
-	case "DESLIZAMENTO":
+	case SLIDE:
 		var eventSlide models.EventSlide
 		return genericCreateEvent(&eventSlide, requestBody, eventsRepository)
 	}
@@ -63,7 +63,6 @@ func genericCreateEvent[T models.EventDescriber](eventEntry T, requestBody []byt
 	return idEventDry, nil
 }
 
-// Create a event
 func (eventsRepository EventsRepository) create(eventObj models.Event, fieldName string, tableName string, value interface{}) (uint64, error) {
 
 	// Start transaction
@@ -124,32 +123,63 @@ func (eventsRepository EventsRepository) create(eventObj models.Event, fieldName
 }
 
 // Get all events
-// func (eventsRepository EventsRepository) GetEventByUF(cityID string) ([]models.Event, error) {
-// 	rows, erro := eventsRepository.db.Query("select * from events where cityID = ?", cityID)
-// 	if erro != nil {
-// 		return nil, erro
-// 	}
+func (eventsRepository EventsRepository) GetEventByType(eventType string) (any, error) {
+	switch eventType {
+	case DRY:
+		return eventsRepository.getDryEvents()
+		// case "INCENDIO":
+		// 	var eventBurn models.EventBurn
+		// 	return genericCreateEvent(&eventBurn, requestBody, eventsRepository)
+		// case "CALOR":
+		// 	var eventHot models.EventHot
+		// 	return genericCreateEvent(&eventHot, requestBody, eventsRepository)
+		// case "FRIO":
+		// 	var eventCold models.EventCold
+		// 	return genericCreateEvent(&eventCold, requestBody, eventsRepository)
+		// case "INUNDACAO":
+		// 	var eventFlood models.EventFlood
+		// 	return genericCreateEvent(&eventFlood, requestBody, eventsRepository)
+		// case "DESLIZAMENTO":
+		// 	var eventSlide models.EventSlide
+		// 	return genericCreateEvent(&eventSlide, requestBody, eventsRepository)
+	}
+	return eventsRepository.getDryEvents()
+}
 
-// 	defer rows.Close()
-// 	var events []models.Event
+func (eventsRepository EventsRepository) getDryEvents() ([]models.EventDry, error) {
+	rows, erro := eventsRepository.db.Query(SQL_SELECT_EVENTS[DRY])
+	if erro != nil {
+		return nil, erro
+	}
 
-// 	for rows.Next() {
-// 		var eventObj models.Event
+	defer rows.Close()
+	var eventsDry []models.EventDry
 
-// 		if erro = rows.Scan(
-// 			&eventObj.ID,
-// 			&eventObj.Name,
-// 			&eventObj.UF,
-// 			&eventObj.CreatedAt,
-// 		); erro != nil {
-// 			return nil, erro
-// 		}
-// 		events = append(events, eventObj)
-// 	}
-// 	return events, nil
-// }
+	for rows.Next() {
+		var eventDry models.EventDry
 
-// Get city by id
+		if erro = rows.Scan(
+			&eventDry.ID,
+			&eventDry.EventType,
+			&eventDry.InitialDate,
+			&eventDry.FinalDate,
+			&eventDry.RelativeHumidity,
+			&eventDry.City.Name,
+			&eventDry.City.UF,
+		); erro != nil {
+			return nil, erro
+		}
+		eventsDry = append(eventsDry, eventDry)
+	}
+	return eventsDry, nil
+}
+
+func genericGetEvents[T models.EventDescriber](eventEntries []T, eventsRepository EventsRepository) error {
+
+	return nil
+}
+
+//Get city by id
 // func (eventsRepository EventsRepository) GetEventById(id uint64) (models.Event, error) {
 // 	rows, erro := eventsRepository.db.Query("select * from events where cityId = ?", id)
 // 	if erro != nil {
