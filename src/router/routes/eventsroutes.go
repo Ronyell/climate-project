@@ -16,14 +16,4 @@ var eventsRoutes = []Route{
 		Method:   http.MethodGet,
 		Function: controllers.GetAllEvents,
 	},
-	{
-		Uri:      "/events/{id}",
-		Method:   http.MethodGet,
-		Function: controllers.GetEventsByID,
-	},
-	{
-		Uri:      "/events/{id}",
-		Method:   http.MethodPut,
-		Function: controllers.UpdateEventByID,
-	},
 }

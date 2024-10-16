@@ -53,7 +53,7 @@ CREATE TABLE eventscold(
 
 CREATE TABLE eventsflood(
     eventFloodId int auto_increment primary key,
-    precipitation float not null,
+    rainPrecipitation float not null,
     eventId int not null,
     FOREIGN KEY (eventId) REFERENCES events(eventId) ON DELETE CASCADE
 ) ENGINE=INNODB;

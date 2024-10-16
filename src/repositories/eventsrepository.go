@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"sync"
 )
 
 // Represent a city repository
@@ -52,6 +53,60 @@ func (eventsRepository EventsRepository) CreateEvent(requestBody []byte) (uint64
 	return 0, errors.New("type not permited")
 }
 
+// Get all events by type
+func (eventsRepository EventsRepository) GetEventByType(eventType string) (any, error) {
+	if eventType == "" {
+		var resultChannels []chan []models.EventDescriber
+		var waitGroup sync.WaitGroup
+
+		resultChannels = append(resultChannels, eventsRepository.startGetGenericEvent(&waitGroup, DRY, SQL_SELECT_EVENTS))
+		resultChannels = append(resultChannels, eventsRepository.startGetGenericEvent(&waitGroup, BURN, SQL_SELECT_EVENTS))
+		resultChannels = append(resultChannels, eventsRepository.startGetGenericEvent(&waitGroup, HOT, SQL_SELECT_EVENTS))
+		resultChannels = append(resultChannels, eventsRepository.startGetGenericEvent(&waitGroup, COLD, SQL_SELECT_EVENTS))
+		resultChannels = append(resultChannels, eventsRepository.startGetGenericEvent(&waitGroup, FLOOD, SQL_SELECT_EVENTS))
+		resultChannels = append(resultChannels, eventsRepository.startGetGenericEvent(&waitGroup, SLIDE, SQL_SELECT_EVENTS))
+
+		waitGroup.Wait()
+
+		return eventsRepository.closeAndThreatingData(resultChannels)
+	}
+
+	var resultChannels chan []models.EventDescriber
+	var waitGroup sync.WaitGroup
+	resultChannels = eventsRepository.startGetGenericEvent(&waitGroup, eventType, SQL_SELECT_EVENTS)
+	waitGroup.Wait()
+
+	return <-resultChannels, nil
+
+}
+
+// Get all events by type and city uf
+func (eventsRepository EventsRepository) GetEventByTypeAndUf(eventType string, cityUf string) (any, error) {
+	if eventType == "" {
+		var resultChannels []chan []models.EventDescriber
+		var waitGroup sync.WaitGroup
+
+		resultChannels = append(resultChannels, eventsRepository.startGetGenericEvent(&waitGroup, DRY, SQL_SELECT_EVENTS_FILTER_UF, cityUf))
+		resultChannels = append(resultChannels, eventsRepository.startGetGenericEvent(&waitGroup, BURN, SQL_SELECT_EVENTS_FILTER_UF, cityUf))
+		resultChannels = append(resultChannels, eventsRepository.startGetGenericEvent(&waitGroup, HOT, SQL_SELECT_EVENTS_FILTER_UF, cityUf))
+		resultChannels = append(resultChannels, eventsRepository.startGetGenericEvent(&waitGroup, COLD, SQL_SELECT_EVENTS_FILTER_UF, cityUf))
+		resultChannels = append(resultChannels, eventsRepository.startGetGenericEvent(&waitGroup, FLOOD, SQL_SELECT_EVENTS_FILTER_UF, cityUf))
+		resultChannels = append(resultChannels, eventsRepository.startGetGenericEvent(&waitGroup, SLIDE, SQL_SELECT_EVENTS_FILTER_UF, cityUf))
+
+		waitGroup.Wait()
+
+		return eventsRepository.closeAndThreatingData(resultChannels)
+	}
+
+	var resultChannels chan []models.EventDescriber
+	var waitGroup sync.WaitGroup
+	resultChannels = eventsRepository.startGetGenericEvent(&waitGroup, eventType, SQL_SELECT_EVENTS_FILTER_UF, cityUf)
+	waitGroup.Wait()
+
+	return <-resultChannels, nil
+
+}
+
 func genericCreateEvent[T models.EventDescriber](eventEntry T, requestBody []byte, eventsRepository EventsRepository) (uint64, error) {
 	eventEntry.GetUnmarshalObject(requestBody)
 	fieldName, table := eventEntry.GetFieldAndTableName()
@@ -73,7 +128,7 @@ func (eventsRepository EventsRepository) create(eventObj models.Event, fieldName
 	defer eventsRepository.db.Close()
 
 	// Create generic event
-	statement, erro := tx.Prepare("insert into events (eventType, eventInitialDate, eventFinalDate, cityId) values (?, ?, ?, ?)")
+	statement, erro := tx.Prepare(SQL_INSERT_EVENT)
 	if erro != nil {
 		return 0, nil
 	}
@@ -94,7 +149,7 @@ func (eventsRepository EventsRepository) create(eventObj models.Event, fieldName
 	}
 
 	// Create specific event
-	statement2, erro := tx.Prepare(fmt.Sprintf("insert into %s (%s, %s) values (?, ?)", tableName, "eventId", fieldName))
+	statement2, erro := tx.Prepare(fmt.Sprintf(SQL_INSERT_ESPECIFIC_EVENT, tableName, "eventId", fieldName))
 	if erro != nil {
 		return 0, erro
 	}
@@ -122,106 +177,167 @@ func (eventsRepository EventsRepository) create(eventObj models.Event, fieldName
 	return uint64(lastID2), nil
 }
 
-// Get all events
-func (eventsRepository EventsRepository) GetEventByType(eventType string) (any, error) {
-	switch eventType {
-	case DRY:
-		return eventsRepository.getDryEvents()
-		// case "INCENDIO":
-		// 	var eventBurn models.EventBurn
-		// 	return genericCreateEvent(&eventBurn, requestBody, eventsRepository)
-		// case "CALOR":
-		// 	var eventHot models.EventHot
-		// 	return genericCreateEvent(&eventHot, requestBody, eventsRepository)
-		// case "FRIO":
-		// 	var eventCold models.EventCold
-		// 	return genericCreateEvent(&eventCold, requestBody, eventsRepository)
-		// case "INUNDACAO":
-		// 	var eventFlood models.EventFlood
-		// 	return genericCreateEvent(&eventFlood, requestBody, eventsRepository)
-		// case "DESLIZAMENTO":
-		// 	var eventSlide models.EventSlide
-		// 	return genericCreateEvent(&eventSlide, requestBody, eventsRepository)
-	}
-	return eventsRepository.getDryEvents()
+func (eventsRepository EventsRepository) startGetGenericEvent(waitGroup *sync.WaitGroup, eventType string, mapSelect map[string]string, params ...string) chan []models.EventDescriber {
+	results := make(chan []models.EventDescriber, 1)
+	waitGroup.Add(1)
+	go eventsRepository.getGenericEvent(waitGroup, results, eventType, mapSelect, params...)
+	return results
 }
 
-func (eventsRepository EventsRepository) getDryEvents() ([]models.EventDry, error) {
-	rows, erro := eventsRepository.db.Query(SQL_SELECT_EVENTS[DRY])
+func (eventsRepository EventsRepository) closeAndThreatingData(resultChanel []chan []models.EventDescriber) (any, error) {
+	var finalResult []models.EventDescriber
+	for _, rChan := range resultChanel {
+		close(rChan)
+		finalResult = append(finalResult, <-rChan...)
+	}
+
+	return finalResult, nil
+}
+
+func (eventsRepository EventsRepository) getGenericEvent(waitGroup *sync.WaitGroup, results chan<- []models.EventDescriber, eventType string, mapSelect map[string]string, params ...string) {
+	var rows *sql.Rows
+	var erro error
+
+	defer waitGroup.Done()
+
+	if params != nil {
+		rows, erro = eventsRepository.db.Query(mapSelect[eventType], params[0])
+
+	} else {
+		rows, erro = eventsRepository.db.Query(mapSelect[eventType])
+	}
+
 	if erro != nil {
-		return nil, erro
+		results <- nil
+		return
 	}
 
 	defer rows.Close()
-	var eventsDry []models.EventDry
+	var eventsResp []models.EventDescriber
 
 	for rows.Next() {
-		var eventDry models.EventDry
-
-		if erro = rows.Scan(
-			&eventDry.ID,
-			&eventDry.EventType,
-			&eventDry.InitialDate,
-			&eventDry.FinalDate,
-			&eventDry.RelativeHumidity,
-			&eventDry.City.Name,
-			&eventDry.City.UF,
-		); erro != nil {
-			return nil, erro
+		var eventObj models.EventDescriber
+		switch eventType {
+		case DRY:
+			eventObj, erro = eventsRepository.getEventsDrySQL(rows)
+		case BURN:
+			eventObj, erro = eventsRepository.getEventsBurnSQL(rows)
+		case HOT:
+			eventObj, erro = eventsRepository.getEventsHotSQL(rows)
+		case COLD:
+			eventObj, erro = eventsRepository.getEventsColdSQL(rows)
+		case FLOOD:
+			eventObj, erro = eventsRepository.getEventsFloodSQL(rows)
+		case SLIDE:
+			eventObj, erro = eventsRepository.getEventsSlideSQL(rows)
 		}
-		eventsDry = append(eventsDry, eventDry)
+
+		if erro != nil {
+			results <- nil
+		}
+		eventsResp = append(eventsResp, eventObj)
 	}
-	return eventsDry, nil
+	results <- eventsResp
 }
 
-func genericGetEvents[T models.EventDescriber](eventEntries []T, eventsRepository EventsRepository) error {
+func (eventsRepository EventsRepository) getEventsDrySQL(rows *sql.Rows) (models.EventDescriber, error) {
+	var eventObj models.EventDry
 
-	return nil
+	if erro := rows.Scan(
+		&eventObj.ID,
+		&eventObj.EventType,
+		&eventObj.InitialDate,
+		&eventObj.FinalDate,
+		&eventObj.RelativeHumidity,
+		&eventObj.City.Name,
+		&eventObj.City.UF,
+	); erro != nil {
+		return nil, erro
+	}
+	return &eventObj, nil
 }
 
-//Get city by id
-// func (eventsRepository EventsRepository) GetEventById(id uint64) (models.Event, error) {
-// 	rows, erro := eventsRepository.db.Query("select * from events where cityId = ?", id)
-// 	if erro != nil {
-// 		return models.Event{
-// 			ID:        0,
-// 			Name:      "",
-// 			UF:        "",
-// 			CreatedAt: time.Time{},
-// 		}, erro
-// 	}
+func (eventsRepository EventsRepository) getEventsBurnSQL(rows *sql.Rows) (models.EventDescriber, error) {
+	var eventObj models.EventBurn
 
-// 	defer rows.Close()
-// 	var eventObj models.Event
+	if erro := rows.Scan(
+		&eventObj.ID,
+		&eventObj.EventType,
+		&eventObj.InitialDate,
+		&eventObj.FinalDate,
+		&eventObj.IsConservationArea,
+		&eventObj.City.Name,
+		&eventObj.City.UF,
+	); erro != nil {
+		return nil, erro
+	}
+	return &eventObj, nil
+}
 
-// 	for rows.Next() {
-// 		if erro = rows.Scan(
-// 			&eventObj.ID,
-// 			&eventObj.Name,
-// 			&eventObj.UF,
-// 			&eventObj.CreatedAt,
-// 		); erro != nil {
-// 			return models.Event{
-// 				ID:        0,
-// 				Name:      "",
-// 				UF:        "",
-// 				CreatedAt: time.Time{},
-// 			}, erro
-// 		}
-// 	}
-// 	return eventObj, nil
-// }
+func (eventsRepository EventsRepository) getEventsHotSQL(rows *sql.Rows) (models.EventDescriber, error) {
+	var eventObj models.EventHot
 
-// func (eventsRepository EventsRepository) UpdateEventById(id uint64, eventObj models.Event) error {
+	if erro := rows.Scan(
+		&eventObj.ID,
+		&eventObj.EventType,
+		&eventObj.InitialDate,
+		&eventObj.FinalDate,
+		&eventObj.Temperature,
+		&eventObj.City.Name,
+		&eventObj.City.UF,
+	); erro != nil {
+		return nil, erro
+	}
+	return &eventObj, nil
+}
 
-// 	statement, erro := eventsRepository.db.Prepare("update  events set cityName = ?, cityUf = ? where cityId = ?")
-// 	if erro != nil {
-// 		return erro
-// 	}
-// 	defer statement.Close()
+func (eventsRepository EventsRepository) getEventsColdSQL(rows *sql.Rows) (models.EventDescriber, error) {
+	var eventObj models.EventCold
 
-// 	if _, erro = statement.Exec(eventObj.Name, eventObj.UF, id); erro != nil {
-// 		return erro
-// 	}
-// 	return nil
-// }
+	if erro := rows.Scan(
+		&eventObj.ID,
+		&eventObj.EventType,
+		&eventObj.InitialDate,
+		&eventObj.FinalDate,
+		&eventObj.Temperature,
+		&eventObj.City.Name,
+		&eventObj.City.UF,
+	); erro != nil {
+		return nil, erro
+	}
+	return &eventObj, nil
+}
+
+func (eventsRepository EventsRepository) getEventsFloodSQL(rows *sql.Rows) (models.EventDescriber, error) {
+	var eventObj models.EventFlood
+
+	if erro := rows.Scan(
+		&eventObj.ID,
+		&eventObj.EventType,
+		&eventObj.InitialDate,
+		&eventObj.FinalDate,
+		&eventObj.RainPrecipitation,
+		&eventObj.City.Name,
+		&eventObj.City.UF,
+	); erro != nil {
+		return nil, erro
+	}
+	return &eventObj, nil
+}
+
+func (eventsRepository EventsRepository) getEventsSlideSQL(rows *sql.Rows) (models.EventDescriber, error) {
+	var eventObj models.EventSlide
+
+	if erro := rows.Scan(
+		&eventObj.ID,
+		&eventObj.EventType,
+		&eventObj.InitialDate,
+		&eventObj.FinalDate,
+		&eventObj.HousesAffected,
+		&eventObj.City.Name,
+		&eventObj.City.UF,
+	); erro != nil {
+		return nil, erro
+	}
+	return &eventObj, nil
+}
