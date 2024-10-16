@@ -5,7 +5,7 @@ services:
     container_name: db
     restart: always
     environment:
-      - MYSQL_DATABASE=elections
+      - MYSQL_DATABASE=climate
       - MYSQL_ROOT_PASSWORD=mysqlPW
       - MYSQL_ROOT_HOST=%
     ports:
@@ -25,3 +25,5 @@ services:
     environment: # Pass environment variables to the service
       DB_HOST: db
     command: "go run /app/main.go"
+    volumes:
+      - ./:/app

@@ -16,10 +16,13 @@ type Route struct {
 
 // Configure all routes
 func Configure(r *mux.Router) *mux.Router {
-	routes := citiesRoutes
-
-	for _, route := range routes {
+	for _, route := range citiesRoutes {
 		r.HandleFunc(route.Uri, middlewares.Logger(route.Function)).Methods(route.Method)
 	}
+
+	for _, route := range eventsRoutes {
+		r.HandleFunc(route.Uri, middlewares.Logger(route.Function)).Methods(route.Method)
+	}
+
 	return r
 }

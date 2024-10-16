@@ -18,7 +18,7 @@ func GetCitiesRepository(db *sql.DB) *CitiesRepository {
 
 // Create a city
 func (citiesRepository CitiesRepository) Create(cityObj models.City) (uint64, error) {
-	statement, erro := citiesRepository.db.Prepare("insert into cities (name, uf) values (?, ?)")
+	statement, erro := citiesRepository.db.Prepare("insert into cities (cityName, cityUf) values (?, ?)")
 	if erro != nil {
 		return 0, nil
 	}
@@ -40,7 +40,7 @@ func (citiesRepository CitiesRepository) Create(cityObj models.City) (uint64, er
 
 // Get all cities
 func (citiesRepository CitiesRepository) GetCityByUF(ufSerach string) ([]models.City, error) {
-	rows, erro := citiesRepository.db.Query("select * from cities where uf = ?", ufSerach)
+	rows, erro := citiesRepository.db.Query("select * from cities where cityUf = ?", ufSerach)
 	if erro != nil {
 		return nil, erro
 	}
@@ -66,7 +66,7 @@ func (citiesRepository CitiesRepository) GetCityByUF(ufSerach string) ([]models.
 
 // Get city by id
 func (citiesRepository CitiesRepository) GetCityById(id uint64) (models.City, error) {
-	rows, erro := citiesRepository.db.Query("select * from cities where id = ?", id)
+	rows, erro := citiesRepository.db.Query("select * from cities where cityId = ?", id)
 	if erro != nil {
 		return models.City{
 			ID:        0,
@@ -99,7 +99,7 @@ func (citiesRepository CitiesRepository) GetCityById(id uint64) (models.City, er
 
 func (citiesRepository CitiesRepository) UpdateCityById(id uint64, cityObj models.City) error {
 
-	statement, erro := citiesRepository.db.Prepare("update  cities set name = ?, uf = ? where id = ?")
+	statement, erro := citiesRepository.db.Prepare("update  cities set cityName = ?, cityUf = ? where cityId = ?")
 	if erro != nil {
 		return erro
 	}
