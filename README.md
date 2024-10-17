@@ -1,6 +1,6 @@
 # Climate Project
 
-Projeto visa cadastrar dados e criar uma visualizacao de dados com eventos climaticos no Brasil
+The project aims to register data and create a data visualization of climate events in Brazil.
 
 
 ## How to execute?
