@@ -1,41 +1,43 @@
-Commands Docker
-Command to run database and api:
-- docker-compose up
+# Climate Project
 
-Sample call:
+Projeto visa cadastrar dados e criar uma visualizacao de dados com eventos climaticos no Brasil
+
+
+## How to execute?
+
+Run command: `docker-compose up`
+
+Access http://localhost:5000 
+
+### To create a city, do this request:
+
 ```
 curl --location 'http://localhost:5000/cities' \
 --header 'Content-Type: application/json' \
 --data '{
-    "name": "Campinas",
-    "UF": "SP"
+    "name": "GURUPI",
+    "UF": "TO",
+    "id": "1709500"
 }'
 ```
 
-Command to exec docker in mysql:
-- docker exec -it db mysql -u root -p 
-    (type password mysqlPW)
+### To create a event, do this request:
+
+```
+curl --location 'http://localhost:5000/events' \
+--header 'Content-Type: application/json' \
+--data '{
+  "city": {
+    "id": "1709500"
+  },
+  "eventType": "INUNDACAO",
+  "initialDate": "2024-01-12T15:04:05.000Z",
+  "finalDate": "2024-01-30T17:04:05.000Z",
+  "rainPrecipitation": 65
+}
+```
+
+### We can to show the data in map, do this request using a fork from [mapa-brasil](https://github.com/clagomess/mapa-brasil):
 
 
-Rules/Commands Go
-
-### Commands:
- - `go mod init <module>` -> init module in go
- - `go run <file>` -> Run file
- - `go build` -> Compile project
- - `go install` -> Compile project (save it in root)
- - `go get <package>` -> install external package
- - `go test` -> Run tests in package
- - `go test ./...` -> Run tests in all project
- - `go tool cover --html=<cover.html>` -> Run tests in all project
-
-### Rules
-- Point of enter is in package main
-- First letter Cap in func is public func
-- First letter is not Cap in func is not public func
-- Variable implicit is used with `:=` and attribute a value
-- Variable explicit is used with a type after variable name and word var before variable name
-- byte = uint32 and rune == int32
-- To declare pointer use `var variable *type`, to reference another use `variable = *variable0`, to dereferencing use `&variable`
-- Array use a fix length. Ex `var array1[5] int`
-- Slice is similar to Array but dont have a prefixed length Ex `var slice1[] int`
+![alt text](data/doc/image.png)
